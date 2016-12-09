@@ -1,0 +1,53 @@
+import Glibc
+
+public enum MutexError: Error {
+    case MutexInit(code: CInt)
+    case MutexLock(code: CInt)
+    case MutexTryLock(code: CInt)
+    case MutexUnlock(code: CInt)
+    case MutexSetPriorityCeiling(code: CInt)
+    case MutexGetPriorityCeiling(code: CInt)
+
+    case CondInit(code: CInt)
+    case CondBroadcast(code: CInt)
+    case CondSignal(code: CInt)
+    case CondWait(code: CInt)
+    case CondTimedWait(code: CInt)
+
+    case NegativeWaitGroup(count: Int)
+}
+
+extension MutexError: CustomStringConvertible {
+    public var description: String {
+        func errorString(_ code: CInt) -> String {
+            return String(cString: strerror(code)) + " (#\(code))"
+        }
+
+        switch self {
+            case .MutexInit(let code):
+                return "pthread_mutex_init() failed: " + errorString(code)
+            case .MutexLock(let code):
+                return "pthread_mutex_lock() failed: " + errorString(code)
+            case .MutexTryLock(let code):
+                return "pthread_mutex_trylock() failed: " + errorString(code)
+            case .MutexUnlock(let code):
+                return "pthread_mutex_unlock() failed: " + errorString(code)
+            case .MutexSetPriorityCeiling(let code):
+                return "pthread_mutex_setprioceiling() failed: " + errorString(code)
+            case .MutexGetPriorityCeiling(let code):
+                return "pthread_mutex_getprioceiling() failed: " + errorString(code)
+            case .CondInit(let code):
+                return "pthread_cond_init() failed: " + errorString(code)
+            case .CondBroadcast(let code):
+                return "pthread_cond_broadcast() failed: " + errorString(code)
+            case .CondSignal(let code):
+                return "pthread_cond_signal() failed: " + errorString(code)
+            case .CondWait(let code):
+                return "pthread_cond_wait() failed: " + errorString(code)
+            case .CondTimedWait(let code):
+                return "pthread_cond_timedwait() failed: " + errorString(code)
+            case .NegativeWaitGroup(let count):
+                return "negative wait group count encountered: count=\(count)"
+        }
+    }
+}
