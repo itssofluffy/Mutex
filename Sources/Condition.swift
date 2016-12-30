@@ -49,8 +49,8 @@ public class Condition {
     }
 
     @discardableResult
-    public func wait(seconds: TimeInterval = -1) throws -> WaitResult {
-        if (seconds < 0) {
+    public func wait(timeout: TimeInterval = -1) throws -> WaitResult {
+        if (timeout < 0) {
             let returnCode = pthread_cond_wait(&self.condition, &self.mutex.mutex)
 
             guard (returnCode == 0) else {
@@ -62,8 +62,8 @@ public class Condition {
 
             gettimeofday(&tv, nil)
 
-            ts.tv_sec = time(nil) + seconds.asSeconds
-            ts.tv_nsec = Int(tv.tv_usec * 1000 + (1000 * 1000 * (seconds.asMilliseconds % 1000)))
+            ts.tv_sec = time(nil) + timeout.seconds
+            ts.tv_nsec = Int(tv.tv_usec * 1000 + (1000 * 1000 * (timeout.milliseconds % 1000)))
             ts.tv_sec += ts.tv_nsec / 1000000000
             ts.tv_nsec %= 1000000000
 
