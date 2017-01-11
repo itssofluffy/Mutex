@@ -8,7 +8,7 @@ public class Once {
         self.mutex = try Mutex()
     }
 
-    public func execute(_ closureHandler: () -> ()) throws {
+    public func execute(_ closureHandler: () -> Void) throws {
         try self.mutex.lock()
 
         defer {
@@ -28,7 +28,7 @@ public class Once {
     }
 
     //
-    public func execute(_ closureHandler: () throws -> ()) throws {
+    public func execute(_ closureHandler: () throws -> Void) throws {
         try self.mutex.lock()
 
         defer {

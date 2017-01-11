@@ -38,23 +38,15 @@ public class Mutex {
     }
 
     /// Locks the mutex before calling the function. Unlocks after closure is completed
-    public func lock(_ closureHandler: () -> ()) throws {
+    public func lock(_ closureHandler: () -> Void) throws {
         try self.lock()
 
-        defer {
-            do {
-                try self.unlock()
-            } catch {
-                let dynamicType = type(of: self)
-
-                print("\(dynamicType).\(#function) failed: \(error)", to: &errorStream)
-            }
-        }
-
         closureHandler()
+
+        try self.unlock()
     }
 
-    public func lock(_ closureHandler: () throws -> ()) throws {
+    public func lock(_ closureHandler: () throws -> Void) throws {
         try self.lock()
 
         defer {
@@ -77,13 +69,51 @@ public class Mutex {
             let errorNumber = errno
 
             if (errorNumber == EBUSY) {
-                return .NotLocked
+                return .Failed
             }
 
             throw MutexError.MutexTryLock(code: errorNumber)
         }
 
-        return .Locked
+        return .Success
+    }
+
+    @discardableResult
+    public func tryLock(_ closureHandler: () -> Void) throws -> TryLockResult {
+        let result = try self.tryLock()
+
+        guard (result == .Success) else {
+            return result
+        }
+
+        closureHandler()
+
+        try self.unlock()
+
+        return .Success
+    }
+
+    @discardableResult
+    public func tryLock(_ closureHandler: () throws -> Void) throws -> TryLockResult {
+        let result = try self.tryLock()
+
+        guard (result == .Success) else {
+            return result
+        }
+
+        defer {
+            do {
+                try self.unlock()
+            } catch {
+                let dynamicType = type(of: self)
+
+                print("\(dynamicType).\(#function) failed: \(error)", to: &errorStream)
+            }
+        }
+
+        try closureHandler()
+
+        return .Success
     }
 
     public func unlock() throws {
