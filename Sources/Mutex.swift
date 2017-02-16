@@ -29,7 +29,7 @@ public class Mutex {
 
     /// Returns a new Mutex.
     public init() throws {
-        let returnCode = pthread_mutex_init(&self.mutex, nil)
+        let returnCode = pthread_mutex_init(&mutex, nil)
 
         guard (returnCode == 0) else {
             throw MutexError.MutexInit(code: errno)
@@ -37,7 +37,7 @@ public class Mutex {
     }
 
     deinit {
-        let returnCode = pthread_mutex_destroy(&self.mutex)
+        let returnCode = pthread_mutex_destroy(&mutex)
 
         guard (returnCode == 0) else {
             let errorNumber = errno
@@ -52,7 +52,7 @@ public class Mutex {
 
     /// Locks the mutex. If the lock is already in use, the calling operation blocks until the mutex is available.
     public func lock() throws {
-        let returnCode = pthread_mutex_lock(&self.mutex)
+        let returnCode = pthread_mutex_lock(&mutex)
 
         guard (returnCode == 0) else {
             throw MutexError.MutexLock(code: errno)
@@ -61,19 +61,19 @@ public class Mutex {
 
     /// Locks the mutex before calling the function. Unlocks after closure is completed
     public func lock(_ closureHandler: () -> Void) throws {
-        try self.lock()
+        try lock()
 
         closureHandler()
 
-        try self.unlock()
+        try unlock()
     }
 
     public func lock(_ closureHandler: () throws -> Void) throws {
-        try self.lock()
+        try lock()
 
         defer {
             do {
-                try self.unlock()
+                try unlock()
             } catch {
                 let dynamicType = type(of: self)
 
@@ -85,7 +85,7 @@ public class Mutex {
     }
 
     public func tryLock() throws -> TryLockResult {
-        let returnCode = pthread_mutex_trylock(&self.mutex)
+        let returnCode = pthread_mutex_trylock(&mutex)
 
         guard (returnCode == 0) else {
             let errorNumber = errno
@@ -102,7 +102,7 @@ public class Mutex {
 
     @discardableResult
     public func tryLock(_ closureHandler: () -> Void) throws -> TryLockResult {
-        let result = try self.tryLock()
+        let result = try tryLock()
 
         guard (result == .Success) else {
             return result
@@ -110,14 +110,14 @@ public class Mutex {
 
         closureHandler()
 
-        try self.unlock()
+        try unlock()
 
         return .Success
     }
 
     @discardableResult
     public func tryLock(_ closureHandler: () throws -> Void) throws -> TryLockResult {
-        let result = try self.tryLock()
+        let result = try tryLock()
 
         guard (result == .Success) else {
             return result
@@ -125,7 +125,7 @@ public class Mutex {
 
         defer {
             do {
-                try self.unlock()
+                try unlock()
             } catch {
                 let dynamicType = type(of: self)
 
@@ -139,7 +139,7 @@ public class Mutex {
     }
 
     public func unlock() throws {
-        let returnCode = pthread_mutex_unlock(&self.mutex)
+        let returnCode = pthread_mutex_unlock(&mutex)
 
         guard (returnCode == 0) else {
             throw MutexError.MutexUnlock(code: errno)
@@ -149,7 +149,7 @@ public class Mutex {
     public func setPriorityCeiling(_ ceiling: Int) throws -> Int {
         var oldCeiling = CInt.allZeros
 
-        let returnCode = pthread_mutex_setprioceiling(&self.mutex, CInt(ceiling), &oldCeiling)
+        let returnCode = pthread_mutex_setprioceiling(&mutex, CInt(ceiling), &oldCeiling)
 
         guard (returnCode == 0) else {
             throw MutexError.MutexSetPriorityCeiling(code: errno)
@@ -161,7 +161,7 @@ public class Mutex {
     public func getPriorityCeiling() throws -> Int {
         var ceiling = CInt.allZeros
 
-        let returnCode = pthread_mutex_getprioceiling(&self.mutex, &ceiling)
+        let returnCode = pthread_mutex_getprioceiling(&mutex, &ceiling)
 
         guard (returnCode == 0) else {
             throw MutexError.MutexGetPriorityCeiling(code: errno)

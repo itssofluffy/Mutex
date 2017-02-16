@@ -27,15 +27,15 @@ public class WaitGroup {
     private var count = 0
 
     public init() throws {
-        self.condition = try Condition(mutex: Mutex())
+        condition = try Condition(mutex: Mutex())
     }
 
     public func add(_ delta: Int) throws {
-        try self.condition.mutex.lock()
+        try condition.mutex.lock()
 
         defer {
             do {
-                try self.condition.mutex.unlock()
+                try condition.mutex.unlock()
             } catch {
                 let dynamicType = type(of: self)
 
@@ -43,27 +43,27 @@ public class WaitGroup {
             }
         }
 
-        self.count += delta
+        count += delta
 
-        if (self.count < 0) {
-            throw MutexError.NegativeWaitGroup(count: self.count)
+        if (count < 0) {
+            throw MutexError.NegativeWaitGroup(count: count)
         }
 
-        try self.condition.broadcast()
+        try condition.broadcast()
     }
 
     /// Decrements the WaitGroup counter.
     public func done() throws {
-        try self.add(-1)
+        try add(-1)
     }
 
     /// Blocks until the WaitGroup counter is Zero.
     public func wait() throws {
-        try self.condition.mutex.lock()
+        try condition.mutex.lock()
 
         defer {
             do {
-                try self.condition.mutex.unlock()
+                try condition.mutex.unlock()
             } catch {
                 let dynamicType = type(of: self)
 
@@ -71,8 +71,8 @@ public class WaitGroup {
             }
         }
 
-        while (self.count > 0) {
-            try self.condition.wait()
+        while (count > 0) {
+            try condition.wait()
         }
     }
 }

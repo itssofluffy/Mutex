@@ -27,15 +27,15 @@ public class Once {
     private var done = false
 
     public init() throws {
-        self.mutex = try Mutex()
+        mutex = try Mutex()
     }
 
     public func execute(_ closureHandler: () -> Void) throws {
-        try self.mutex.lock()
+        try mutex.lock()
 
         defer {
             do {
-                try self.mutex.unlock()
+                try mutex.unlock()
             } catch {
                 let dynamicType = type(of: self)
 
@@ -43,19 +43,19 @@ public class Once {
             }
         }
 
-        if (!self.done) {
-            self.done = true
+        if (!done) {
+            done = true
             closureHandler()
         }
     }
 
     //
     public func execute(_ closureHandler: () throws -> Void) throws {
-        try self.mutex.lock()
+        try mutex.lock()
 
         defer {
             do {
-                try self.mutex.unlock()
+                try mutex.unlock()
             } catch {
                 let dynamicType = type(of: self)
 
@@ -63,8 +63,8 @@ public class Once {
             }
         }
 
-        if (!self.done) {
-            self.done = true
+        if (!done) {
+            done = true
             try closureHandler()
         }
     }
