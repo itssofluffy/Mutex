@@ -41,15 +41,16 @@ public class Condition {
     }
 
     deinit {
-        let returnCode = pthread_cond_destroy(&condition)
+        doCatchWrapper(funcCall: {
+                           let returnCode = pthread_cond_destroy(&self.condition)
 
-        if (returnCode != 0) {
-            let errorNumber = errno
-            let errorString = String(cString: strerror(errorNumber))
-            let dynamicType = type(of: self)
-
-            print("\(dynamicType).\(#function).pthread_cond_destory() failed: \(errorString) (#\(errorNumber))", to: &errorStream)
-        }
+                           guard (returnCode == 0) else {
+                               throw MutexError.CondDestroy(code: errno)
+                           }
+                       },
+                       failed:  { failure in
+                           mutexLogger(failure)
+                       })
     }
 
     /// Wakes all operations waiting on `Cond`.

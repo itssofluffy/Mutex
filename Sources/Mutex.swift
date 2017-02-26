@@ -37,17 +37,16 @@ public class Mutex {
     }
 
     deinit {
-        let returnCode = pthread_mutex_destroy(&mutex)
+        doCatchWrapper(funcCall: {
+                           let returnCode = pthread_mutex_destroy(&self.mutex)
 
-        guard (returnCode == 0) else {
-            let errorNumber = errno
-            let errorString = String(cString: strerror(errorNumber))
-            let dynamicType = type(of: self)
-
-            print("\(dynamicType).\(#function).pthread_mutex_destory() failed: \(errorString) (#\(errorNumber))", to: &errorStream)
-
-            return
-        }
+                           guard (returnCode == 0) else {
+                               throw MutexError.MutexDestroy(code: errno)
+                           }
+                       },
+                       failed:  { failure in
+                           mutexLogger(failure)
+                       })
     }
 
     /// Locks the mutex. If the lock is already in use, the calling operation blocks until the mutex is available.
@@ -72,13 +71,12 @@ public class Mutex {
         try lock()
 
         defer {
-            do {
-                try unlock()
-            } catch {
-                let dynamicType = type(of: self)
-
-                print("\(dynamicType).\(#function) failed: \(error)", to: &errorStream)
-            }
+            doCatchWrapper(funcCall: {
+                               try self.unlock()
+                           },
+                           failed:  { failure in
+                               mutexLogger(failure)
+                           })
         }
 
         try closureHandler()
@@ -124,13 +122,12 @@ public class Mutex {
         }
 
         defer {
-            do {
-                try unlock()
-            } catch {
-                let dynamicType = type(of: self)
-
-                print("\(dynamicType).\(#function) failed: \(error)", to: &errorStream)
-            }
+            doCatchWrapper(funcCall: {
+                               try self.unlock()
+                           },
+                           failed:  { failure in
+                               mutexLogger(failure)
+                           })
         }
 
         try closureHandler()

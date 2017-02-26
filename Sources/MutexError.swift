@@ -24,6 +24,7 @@ import Glibc
 
 public enum MutexError: Error {
     case MutexInit(code: CInt)
+    case MutexDestroy(code: CInt)
     case MutexLock(code: CInt)
     case MutexTryLock(code: CInt)
     case MutexUnlock(code: CInt)
@@ -31,6 +32,7 @@ public enum MutexError: Error {
     case MutexGetPriorityCeiling(code: CInt)
 
     case CondInit(code: CInt)
+    case CondDestroy(code: CInt)
     case CondBroadcast(code: CInt)
     case CondSignal(code: CInt)
     case CondWait(code: CInt)
@@ -48,6 +50,8 @@ extension MutexError: CustomStringConvertible {
         switch self {
             case .MutexInit(let code):
                 return "pthread_mutex_init() failed: " + errorString(code)
+            case .MutexDestroy(let code):
+                return "pthread_mutex_destroy() failed: " + errorString(code)
             case .MutexLock(let code):
                 return "pthread_mutex_lock() failed: " + errorString(code)
             case .MutexTryLock(let code):
@@ -60,6 +64,8 @@ extension MutexError: CustomStringConvertible {
                 return "pthread_mutex_getprioceiling() failed: " + errorString(code)
             case .CondInit(let code):
                 return "pthread_cond_init() failed: " + errorString(code)
+            case .CondDestroy(let code):
+                return "pthread_cond_destroy() failed: " + errorString(code)
             case .CondBroadcast(let code):
                 return "pthread_cond_broadcast() failed: " + errorString(code)
             case .CondSignal(let code):

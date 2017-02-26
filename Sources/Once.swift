@@ -34,13 +34,12 @@ public class Once {
         try mutex.lock()
 
         defer {
-            do {
-                try mutex.unlock()
-            } catch {
-                let dynamicType = type(of: self)
-
-                print("\(dynamicType).\(#function) failed: \(error))", to: &errorStream)
-            }
+            doCatchWrapper(funcCall: {
+                               try self.mutex.unlock()
+                           },
+                           failed:  { failure in
+                               mutexLogger(failure)
+                           })
         }
 
         if (!done) {
@@ -54,13 +53,12 @@ public class Once {
         try mutex.lock()
 
         defer {
-            do {
-                try mutex.unlock()
-            } catch {
-                let dynamicType = type(of: self)
-
-                print("\(dynamicType).\(#function) failed: \(error))", to: &errorStream)
-            }
+            doCatchWrapper(funcCall: {
+                               try self.mutex.unlock()
+                           },
+                           failed:  { failure in
+                               mutexLogger(failure)
+                           })
         }
 
         if (!done) {

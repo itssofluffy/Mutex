@@ -34,13 +34,12 @@ public class WaitGroup {
         try condition.mutex.lock()
 
         defer {
-            do {
-                try condition.mutex.unlock()
-            } catch {
-                let dynamicType = type(of: self)
-
-                print("\(dynamicType).\(#function) failed: \(error)", to: &errorStream)
-            }
+            doCatchWrapper(funcCall: {
+                               try self.condition.mutex.unlock()
+                           },
+                           failed:  { failure in
+                               mutexLogger(failure)
+                           })
         }
 
         count += delta
@@ -62,13 +61,12 @@ public class WaitGroup {
         try condition.mutex.lock()
 
         defer {
-            do {
-                try condition.mutex.unlock()
-            } catch {
-                let dynamicType = type(of: self)
-
-                print("\(dynamicType).\(#function) failed: \(error)", to: &errorStream)
-            }
+            doCatchWrapper(funcCall: {
+                               try self.condition.mutex.unlock()
+                           },
+                           failed:  { failure in
+                               mutexLogger(failure)
+                           })
         }
 
         while (count > 0) {
