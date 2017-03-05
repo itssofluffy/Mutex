@@ -20,8 +20,6 @@
     IN THE SOFTWARE.
 */
 
-import ISFLibrary
-
 public class WaitGroup {
     private let condition: Condition
     private var count = 0
@@ -31,24 +29,15 @@ public class WaitGroup {
     }
 
     public func add(_ delta: Int) throws {
-        try condition.mutex.lock()
+        try condition.mutex.lock {
+            self.count += delta
 
-        defer {
-            doCatchWrapper(funcCall: {
-                               try self.condition.mutex.unlock()
-                           },
-                           failed:  { failure in
-                               mutexLogger(failure)
-                           })
+            guard (self.count >= 0) else {
+                throw MutexError.NegativeWaitGroup(count: self.count)
+            }
+
+            try self.condition.broadcast()
         }
-
-        count += delta
-
-        if (count < 0) {
-            throw MutexError.NegativeWaitGroup(count: count)
-        }
-
-        try condition.broadcast()
     }
 
     /// Decrements the WaitGroup counter.
@@ -58,19 +47,10 @@ public class WaitGroup {
 
     /// Blocks until the WaitGroup counter is Zero.
     public func wait() throws {
-        try condition.mutex.lock()
-
-        defer {
-            doCatchWrapper(funcCall: {
-                               try self.condition.mutex.unlock()
-                           },
-                           failed:  { failure in
-                               mutexLogger(failure)
-                           })
-        }
-
-        while (count > 0) {
-            try condition.wait()
+        try condition.mutex.lock {
+            while (self.count > 0) {
+                try self.condition.wait()
+            }
         }
     }
 }

@@ -31,7 +31,7 @@ public class Mutex {
     public init() throws {
         let returnCode = pthread_mutex_init(&mutex, nil)
 
-        guard (returnCode == 0) else {
+        guard (returnCode >= 0) else {
             throw MutexError.MutexInit(code: errno)
         }
     }
@@ -40,7 +40,7 @@ public class Mutex {
         doCatchWrapper(funcCall: {
                            let returnCode = pthread_mutex_destroy(&self.mutex)
 
-                           guard (returnCode == 0) else {
+                           guard (returnCode >= 0) else {
                                throw MutexError.MutexDestroy(code: errno)
                            }
                        },
@@ -49,26 +49,13 @@ public class Mutex {
                        })
     }
 
-    /// Locks the mutex. If the lock is already in use, the calling operation blocks until the mutex is available.
-    public func lock() throws {
+    /// Locks the mutex before calling the throwing closure. Unlocks after closure is completed
+    public func lock<T>(_ closureHandler: @escaping () throws -> T?) throws -> T? {
         let returnCode = pthread_mutex_lock(&mutex)
 
-        guard (returnCode == 0) else {
+        guard (returnCode >= 0) else {
             throw MutexError.MutexLock(code: errno)
         }
-    }
-
-    /// Locks the mutex before calling the function. Unlocks after closure is completed
-    public func lock(_ closureHandler: () -> Void) throws {
-        try lock()
-
-        closureHandler()
-
-        try unlock()
-    }
-
-    public func lock(_ closureHandler: () throws -> Void) throws {
-        try lock()
 
         defer {
             doCatchWrapper(funcCall: {
@@ -79,46 +66,21 @@ public class Mutex {
                            })
         }
 
-        try closureHandler()
+        return try closureHandler()
     }
 
-    public func tryLock() throws -> TryLockResult {
+    /// Attempt to Lock the mutex before calling the throwing closure. Unlocks after closure is completed
+    public func tryLock<T>(_ closureHandler: @escaping () throws -> T?) throws -> TryLockResult<T> {
         let returnCode = pthread_mutex_trylock(&mutex)
 
-        guard (returnCode == 0) else {
+        guard (returnCode >= 0) else {
             let errorNumber = errno
 
-            if (errorNumber == EBUSY) {
-                return .Failed
+            guard (errorNumber == EBUSY) else {
+                throw MutexError.MutexTryLock(code: errorNumber)
             }
 
-            throw MutexError.MutexTryLock(code: errorNumber)
-        }
-
-        return .Success
-    }
-
-    @discardableResult
-    public func tryLock(_ closureHandler: () -> Void) throws -> TryLockResult {
-        let result = try tryLock()
-
-        guard (result == .Success) else {
-            return result
-        }
-
-        closureHandler()
-
-        try unlock()
-
-        return .Success
-    }
-
-    @discardableResult
-    public func tryLock(_ closureHandler: () throws -> Void) throws -> TryLockResult {
-        let result = try tryLock()
-
-        guard (result == .Success) else {
-            return result
+            return TryLockResult(lock: .Failed, result: nil)
         }
 
         defer {
@@ -130,15 +92,15 @@ public class Mutex {
                            })
         }
 
-        try closureHandler()
+        let result = try closureHandler()
 
-        return .Success
+        return TryLockResult(lock: .Success, result: result)
     }
 
     public func unlock() throws {
         let returnCode = pthread_mutex_unlock(&mutex)
 
-        guard (returnCode == 0) else {
+        guard (returnCode >= 0) else {
             throw MutexError.MutexUnlock(code: errno)
         }
     }
@@ -148,7 +110,7 @@ public class Mutex {
 
         let returnCode = pthread_mutex_setprioceiling(&mutex, CInt(ceiling), &oldCeiling)
 
-        guard (returnCode == 0) else {
+        guard (returnCode >= 0) else {
             throw MutexError.MutexSetPriorityCeiling(code: errno)
         }
 
@@ -160,7 +122,7 @@ public class Mutex {
 
         let returnCode = pthread_mutex_getprioceiling(&mutex, &ceiling)
 
-        guard (returnCode == 0) else {
+        guard (returnCode >= 0) else {
             throw MutexError.MutexGetPriorityCeiling(code: errno)
         }
 

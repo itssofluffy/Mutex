@@ -20,50 +20,24 @@
     IN THE SOFTWARE.
 */
 
-import ISFLibrary
-
 public class Once {
     private let mutex: Mutex
-    private var done = false
+    public private(set) var done = false
 
     public init() throws {
         mutex = try Mutex()
     }
 
-    public func execute(_ closureHandler: () -> Void) throws {
-        try mutex.lock()
-
-        defer {
-            doCatchWrapper(funcCall: {
-                               try self.mutex.unlock()
-                           },
-                           failed:  { failure in
-                               mutexLogger(failure)
-                           })
-        }
-
-        if (!done) {
-            done = true
-            closureHandler()
-        }
-    }
-
     //
-    public func execute(_ closureHandler: () throws -> Void) throws {
-        try mutex.lock()
+    public func execute<T>(_ closureHandler: @escaping () throws -> T) throws -> T? {
+        return try mutex.lock {
+            if (!self.done) {
+                self.done = true
 
-        defer {
-            doCatchWrapper(funcCall: {
-                               try self.mutex.unlock()
-                           },
-                           failed:  { failure in
-                               mutexLogger(failure)
-                           })
-        }
+                return try closureHandler()
+            }
 
-        if (!done) {
-            done = true
-            try closureHandler()
+            return nil
         }
     }
 }

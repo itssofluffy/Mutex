@@ -35,7 +35,7 @@ public class Condition {
 
         let returnCode = pthread_cond_init(&condition, nil)
 
-        guard (returnCode == 0) else {
+        guard (returnCode >= 0) else {
             throw MutexError.CondInit(code: errno)
         }
     }
@@ -44,7 +44,7 @@ public class Condition {
         doCatchWrapper(funcCall: {
                            let returnCode = pthread_cond_destroy(&self.condition)
 
-                           guard (returnCode == 0) else {
+                           guard (returnCode >= 0) else {
                                throw MutexError.CondDestroy(code: errno)
                            }
                        },
@@ -57,7 +57,7 @@ public class Condition {
     public func broadcast() throws {
         let returnCode = pthread_cond_broadcast(&condition)
 
-        guard (returnCode == 0) else {
+        guard (returnCode >= 0) else {
             throw MutexError.CondBroadcast(code: errno)
         }
     }
@@ -66,17 +66,17 @@ public class Condition {
     public func signal() throws {
         let returnCode = pthread_cond_signal(&condition)
 
-        guard (returnCode == 0) else {
+        guard (returnCode >= 0) else {
             throw MutexError.CondSignal(code: errno)
         }
     }
 
     @discardableResult
-    public func wait(timeout: TimeInterval = -1) throws -> WaitResult {
+    public func wait(timeout: TimeInterval = -1) throws -> Wait {
         if (timeout < 0) {
             let returnCode = pthread_cond_wait(&condition, &mutex.mutex)
 
-            guard (returnCode == 0) else {
+            guard (returnCode >= 0) else {
                 throw MutexError.CondWait(code: errno)
             }
         } else {
@@ -86,20 +86,20 @@ public class Condition {
             gettimeofday(&tv, nil)
 
             ts.tv_sec = time(nil) + timeout.wholeSeconds
-            ts.tv_nsec = Int(tv.tv_usec * 1000 + (1000 * 1000 * (timeout.milliseconds % 1000)))
-            ts.tv_sec += ts.tv_nsec / 1000000000
-            ts.tv_nsec %= 1000000000
+            ts.tv_nsec = Int(tv.tv_usec * 1_000 + (1_000 * 1_000 * (timeout.milliseconds % 1_000)))
+            ts.tv_sec += ts.tv_nsec / 1_000_000_000
+            ts.tv_nsec %= 1_000_000_000
 
             let returnCode = pthread_cond_timedwait(&condition, &mutex.mutex, &ts)
 
-            guard (returnCode == 0) else {
+            guard (returnCode >= 0) else {
                 let errorNumber = errno
 
-                if (errorNumber == ETIMEDOUT) {
-                    return .TimedOut
+                guard (errorNumber == ETIMEDOUT) else {
+                    throw MutexError.CondTimedWait(code: errorNumber)
                 }
 
-                throw MutexError.CondTimedWait(code: errorNumber)
+                return .TimedOut
             }
         }
 
