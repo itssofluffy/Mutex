@@ -37,16 +37,16 @@ public class Mutex {
     }
 
     deinit {
-        doCatchWrapper(funcCall: {
-                           let returnCode = pthread_mutex_destroy(&self.mutex)
+        wrapper(do:    {
+                    let returnCode = pthread_mutex_destroy(&self.mutex)
 
-                           guard (returnCode >= 0) else {
-                               throw MutexError.MutexDestroy(code: errno)
-                           }
-                       },
-                       failed:  { failure in
-                           mutexLogger(failure)
-                       })
+                    guard (returnCode >= 0) else {
+                        throw MutexError.MutexDestroy(code: errno)
+                    }
+                },
+                catch: { failure in
+                    mutexLogger(failure)
+                })
     }
 
     /// Locks the mutex before calling the throwing closure.
@@ -72,12 +72,12 @@ public class Mutex {
         try lock()
 
         defer {
-            doCatchWrapper(funcCall: {
-                               try self.unlock()
-                           },
-                           failed:  { failure in
-                               mutexLogger(failure)
-                           })
+            wrapper(do:    {
+                        try self.unlock()
+                    },
+                    catch: { failure in
+                        mutexLogger(failure)
+                    })
         }
 
         return try closure()
@@ -105,12 +105,12 @@ public class Mutex {
         }
 
         defer {
-            doCatchWrapper(funcCall: {
-                               try self.unlock()
-                           },
-                           failed:  { failure in
-                               mutexLogger(failure)
-                           })
+            wrapper(do:    {
+                        try self.unlock()
+                    },
+                    catch: { failure in
+                        mutexLogger(failure)
+                    })
         }
 
         let result = try closure()

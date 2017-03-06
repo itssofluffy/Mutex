@@ -41,16 +41,16 @@ public class Condition {
     }
 
     deinit {
-        doCatchWrapper(funcCall: {
-                           let returnCode = pthread_cond_destroy(&self.condition)
+        wrapper(do:    {
+                    let returnCode = pthread_cond_destroy(&self.condition)
 
-                           guard (returnCode >= 0) else {
-                               throw MutexError.CondDestroy(code: errno)
-                           }
-                       },
-                       failed:  { failure in
-                           mutexLogger(failure)
-                       })
+                    guard (returnCode >= 0) else {
+                        throw MutexError.CondDestroy(code: errno)
+                    }
+                },
+                catch: { failure in
+                    mutexLogger(failure)
+                })
     }
 
     /// Wakes all operations waiting on `Cond`.
