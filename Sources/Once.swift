@@ -28,13 +28,19 @@ public class Once {
         mutex = try Mutex()
     }
 
-    //
-    public func execute<T>(_ closureHandler: @escaping () throws -> T) throws -> T? {
+    /// Execute a closure once whilst exclusive locked using a mutex.
+    ///
+    /// - Parameters:
+    ///   - closure:  The closure to call.
+    ///
+    /// - Returns:    The return of the `closure` or nil if the `closure`
+    ///               has already been called.
+    public func execute<T>(_ closure: @escaping () throws -> T?) throws -> T? {
         return try mutex.lock {
             if (!self.done) {
                 self.done = true
 
-                return try closureHandler()
+                return try closure()
             }
 
             return nil

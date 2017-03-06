@@ -1,7 +1,7 @@
 /*
-    TryLockResult.swift
+    Lock.swift
 
-    Copyright (c) 2017 Stephen Whittle  All rights reserved.
+    Copyright (c) 2016, 2017 Stephen Whittle  All rights reserved.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"),
@@ -20,7 +20,18 @@
     IN THE SOFTWARE.
 */
 
-public struct TryLockResult<T> {
-    public let lock:   TryLock
-    public let result: T?
+public enum Lock {
+    case Failed     // The mutex could not be locked because it was already locked
+    case Success    // The mutex was locked
+}
+
+extension Lock: CustomStringConvertible {
+    public var description: String {
+        switch self {
+            case .Failed:
+                return "failed"
+            case .Success:
+                return "success"
+        }
+    }
 }
