@@ -29,18 +29,14 @@ public class Mutex {
 
     /// Returns a new Mutex.
     public init() throws {
-        let returnCode = pthread_mutex_init(&mutex, nil)
-
-        guard (returnCode >= 0) else {
+        guard (pthread_mutex_init(&mutex, nil) >= 0) else {
             throw MutexError.MutexInit(code: errno)
         }
     }
 
     deinit {
         wrapper(do:    {
-                    let returnCode = pthread_mutex_destroy(&self.mutex)
-
-                    guard (returnCode >= 0) else {
+                    guard (pthread_mutex_destroy(&self.mutex) >= 0) else {
                         throw MutexError.MutexDestroy(code: errno)
                     }
                 },
@@ -53,9 +49,7 @@ public class Mutex {
     ///
     /// - Throws:   `MutesError.MutexLock`
     public func lock() throws {
-        let returnCode = pthread_mutex_lock(&mutex)
-
-        guard (returnCode >= 0) else {
+        guard (pthread_mutex_lock(&mutex) >= 0) else {
             throw MutexError.MutexLock(code: errno)
         }
     }
@@ -92,9 +86,7 @@ public class Mutex {
     ///
     /// - Returns:  The lock status and closure return as a `LockResult`.
     public func tryLock<T>(_ closure: @escaping () throws -> T?) throws -> LockResult<T> {
-        let returnCode = pthread_mutex_trylock(&mutex)
-
-        guard (returnCode >= 0) else {
+        guard (pthread_mutex_trylock(&mutex) >= 0) else {
             let errorNumber = errno
 
             guard (errorNumber == EBUSY) else {
@@ -113,18 +105,14 @@ public class Mutex {
                     })
         }
 
-        let result = try closure()
-
-        return LockResult(lock: .Success, result: result)
+        return try LockResult(lock: .Success, result: closure())
     }
 
     /// Attempt to unlock the mutex.
     ///
     /// - Throws:   `MutesError.MutexUnLock`
     public func unlock() throws {
-        let returnCode = pthread_mutex_unlock(&mutex)
-
-        guard (returnCode >= 0) else {
+        guard (pthread_mutex_unlock(&mutex) >= 0) else {
             throw MutexError.MutexUnlock(code: errno)
         }
     }
@@ -132,9 +120,7 @@ public class Mutex {
     public func setPriorityCeiling(_ ceiling: Int) throws -> Int {
         var oldCeiling = CInt.allZeros
 
-        let returnCode = pthread_mutex_setprioceiling(&mutex, CInt(ceiling), &oldCeiling)
-
-        guard (returnCode >= 0) else {
+        guard (pthread_mutex_setprioceiling(&mutex, CInt(ceiling), &oldCeiling) >= 0) else {
             throw MutexError.MutexSetPriorityCeiling(code: errno)
         }
 
@@ -144,9 +130,7 @@ public class Mutex {
     public func getPriorityCeiling() throws -> Int {
         var ceiling = CInt.allZeros
 
-        let returnCode = pthread_mutex_getprioceiling(&mutex, &ceiling)
-
-        guard (returnCode >= 0) else {
+        guard (pthread_mutex_getprioceiling(&mutex, &ceiling) >= 0) else {
             throw MutexError.MutexGetPriorityCeiling(code: errno)
         }
 

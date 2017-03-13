@@ -30,21 +30,17 @@ public class Condition {
 
     ///  Returns a new Cond.
     /// - Parameter mutex: A Mutex object.
-    public init(mutex: Mutex) throws {
+    public init(_ mutex: Mutex) throws {
         self.mutex = mutex
 
-        let returnCode = pthread_cond_init(&condition, nil)
-
-        guard (returnCode >= 0) else {
+        guard (pthread_cond_init(&condition, nil) >= 0) else {
             throw MutexError.CondInit(code: errno)
         }
     }
 
     deinit {
         wrapper(do:    {
-                    let returnCode = pthread_cond_destroy(&self.condition)
-
-                    guard (returnCode >= 0) else {
+                    guard (pthread_cond_destroy(&self.condition) >= 0) else {
                         throw MutexError.CondDestroy(code: errno)
                     }
                 },
@@ -55,28 +51,22 @@ public class Condition {
 
     /// Wakes all operations waiting on `Cond`.
     public func broadcast() throws {
-        let returnCode = pthread_cond_broadcast(&condition)
-
-        guard (returnCode >= 0) else {
+        guard (pthread_cond_broadcast(&condition) >= 0) else {
             throw MutexError.CondBroadcast(code: errno)
         }
     }
 
     /// Wakes one operations waiting on `Cond`.
     public func signal() throws {
-        let returnCode = pthread_cond_signal(&condition)
-
-        guard (returnCode >= 0) else {
+        guard (pthread_cond_signal(&condition) >= 0) else {
             throw MutexError.CondSignal(code: errno)
         }
     }
 
     @discardableResult
-    public func wait(timeout: TimeInterval = -1) throws -> Wait {
+    public func wait(_ timeout: TimeInterval = -1) throws -> Wait {
         if (timeout < 0) {
-            let returnCode = pthread_cond_wait(&condition, &mutex.mutex)
-
-            guard (returnCode >= 0) else {
+            guard (pthread_cond_wait(&condition, &mutex.mutex) >= 0) else {
                 throw MutexError.CondWait(code: errno)
             }
         } else {
@@ -90,9 +80,7 @@ public class Condition {
             ts.tv_sec += ts.tv_nsec / 1_000_000_000
             ts.tv_nsec %= 1_000_000_000
 
-            let returnCode = pthread_cond_timedwait(&condition, &mutex.mutex, &ts)
-
-            guard (returnCode >= 0) else {
+            guard (pthread_cond_timedwait(&condition, &mutex.mutex, &ts) >= 0) else {
                 let errorNumber = errno
 
                 guard (errorNumber == ETIMEDOUT) else {

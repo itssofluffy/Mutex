@@ -1,7 +1,7 @@
 /*
-    WaitGroup.swift
+    XCTestManifests.swift
 
-    Copyright (c) 2016, 2017 Stephen Whittle  All rights reserved.
+    Copyright (c) 2017 Stephen Whittle  All rights reserved.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"),
@@ -20,37 +20,33 @@
     IN THE SOFTWARE.
 */
 
-public class WaitGroup {
-    private let condition: Condition
-    private var count = 0
+import XCTest
 
-    public init() throws {
-        condition = try Condition(Mutex())
-    }
+import Foundation
 
-    public func add(_ delta: Int) throws {
-        try condition.mutex.lock {
-            self.count += delta
+@testable import Mutex
 
-            guard (self.count >= 0) else {
-                throw MutexError.NegativeWaitGroup(count: self.count)
-            }
-
-            try self.condition.broadcast()
-        }
-    }
-
-    /// Decrements the WaitGroup counter.
-    public func done() throws {
-        try add(-1)
-    }
-
-    /// Blocks until the WaitGroup counter is Zero.
-    public func wait() throws {
-        try condition.mutex.lock {
-            while (self.count > 0) {
-                try self.condition.wait()
-            }
-        }
-    }
+func now() -> TimeInterval {
+    return Date().timeIntervalSince1970
 }
+
+func makeTotal(_ count: Int) -> Int {
+    var result = 0
+
+    if (count > 0) {
+        for i in 0 ..< count {
+            result += i
+        }
+    }
+
+    return result
+}
+
+#if !os(OSX)
+public let allTests = [
+    testCase(MutexLockTests.allTests),
+    testCase(OnceTests.allTests),
+    testCase(WaitGroupTests.allTests),
+    testCase(ConditionTests.allTests)
+]
+#endif

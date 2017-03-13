@@ -1,7 +1,7 @@
 /*
-    MutexTests.swift
+    OnceTests.swift
 
-    Copyright (c) 2016, 2017 Stephen Whittle  All rights reserved.
+    Copyright (c) 2017 Stephen Whittle  All rights reserved.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"),
@@ -19,20 +19,38 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
     IN THE SOFTWARE.
 */
+
 import XCTest
+
 @testable import Mutex
 
-class MutexTests: XCTestCase {
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        XCTAssertEqual(Mutex().text, "Hello, World!")
+class OnceTests: XCTestCase {
+    func testOnce() {
+        var completed = false
+
+        do {
+            var total = 0
+            let once = try Once()
+
+            for _ in 0 ..< 100 {
+                try once.execute {
+                    total += 1
+                }
+            }
+
+            XCTAssert(total == 1, "Once.execute() should only run once.")
+
+            completed = true
+        } catch {
+            XCTAssert(false, "\(error)")
+        }
+
+        XCTAssert(completed, "test not completed")
     }
 
-
-    static var allTests : [(String, (MutexTests) -> () throws -> Void)] {
-        return [
-            ("testExample", testExample),
-        ]
-    }
+#if !os(OSX)
+    static let allTests = [
+        ("testOnce", testOnce)
+    ]
+#endif
 }
