@@ -23,6 +23,10 @@
 public enum Lock {
     case Failed     // The mutex could not be locked because it was already locked
     case Success    // The mutex was locked
+
+    public init(_ status: Lock) {
+        self = status
+    }
 }
 
 extension Lock: CustomStringConvertible {

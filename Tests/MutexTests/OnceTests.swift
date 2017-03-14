@@ -38,7 +38,7 @@ class OnceTests: XCTestCase {
                 }
             }
 
-            XCTAssert(total == 1, "Once.execute() should only run once.")
+            XCTAssert(total == 1, "total = \(total).")
 
             completed = true
         } catch {

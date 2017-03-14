@@ -28,7 +28,7 @@ import Dispatch
 @testable import Mutex
 
 class MutexLockTests: XCTestCase {
-    func testMutexSimpleLock() {
+    func testMutexLockSimple() {
         var completed = false
 
         do {
@@ -45,7 +45,7 @@ class MutexLockTests: XCTestCase {
         XCTAssert(completed, "test not completed")
     }
 
-    func testMutexClosure() {
+    func testMutexLockClosure() {
         var completed = false
 
         do {
@@ -56,7 +56,7 @@ class MutexLockTests: XCTestCase {
                 result = 1
             }
 
-            XCTAssert(result == 1, "Result should equal One.")
+            XCTAssert(result == 1, "result == \(result)")
 
             completed = true
         } catch {
@@ -66,7 +66,7 @@ class MutexLockTests: XCTestCase {
         XCTAssert(completed, "test not completed")
     }
 
-    func testMutexDispatch() {
+    func testMutexLockDispatch() {
         var completed = false
 
         do {
@@ -99,7 +99,103 @@ class MutexLockTests: XCTestCase {
 
             try waitGroup.wait()
 
-            XCTAssert(expectedTotal == total, "The expected total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
+            XCTAssert(expectedTotal == total, "expected total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
+
+            completed = true
+        } catch {
+            XCTAssert(false, "\(error)")
+        }
+
+        XCTAssert(completed, "test not completed")
+    }
+
+    func testTryMutexLockSimple() {
+        var completed = false
+
+        do {
+            let mutex = try Mutex()
+
+            if (try mutex.tryLock() == .Failed) {
+                XCTAssert(false, "tryLock() failed")
+            }
+
+            try mutex.unlock()
+
+            try mutex.lock {
+                if (try mutex.tryLock() == .Success) {
+                    XCTAssert(false, "tryLock() success")
+                }
+            }
+
+            completed = true
+        } catch {
+            XCTAssert(false, "\(error)")
+        }
+
+        XCTAssert(completed, "test not completed")
+    }
+
+    func testTryMutexLockClosure() {
+        var completed = false
+
+        do {
+            let mutex = try Mutex()
+
+            let lockResult = try mutex.tryLock { () -> Int in
+                return 1
+            }
+
+            XCTAssert(lockResult.lock == .Success, "lock = \(lockResult.lock)")
+            XCTAssert(lockResult.result == 1, "result = \(lockResult.result)")
+
+            completed = true
+        } catch {
+            XCTAssert(false, "\(error)")
+        }
+
+        XCTAssert(completed, "test not completed")
+    }
+
+    func testTryMutexLockDispatch() {
+        var completed = false
+
+        do {
+            let count = 100
+            let mutex = try Mutex()
+            var total = 0
+            let expectedTotal = makeTotal(count)
+            let waitGroup = try WaitGroup()
+
+            let closure = { (count: Int) -> Void in
+                DispatchQueue(label: "com.tryMutex.test", qos: .background).async {
+                    wrapper(do: {
+                                while (true) {
+                                    if (try mutex.tryLock() == .Success) {
+                                        total += count
+
+                                        try mutex.unlock()
+
+                                        try waitGroup.done()
+
+                                        break
+                                    }
+                                }
+                            },
+                            catch: { failure in
+                                mutexLogger(failure)
+                            })
+                }
+            }
+
+            try waitGroup.add(count)
+
+            for i in 0 ..< count {
+                closure(i)
+            }
+
+            try waitGroup.wait()
+
+            XCTAssert(expectedTotal == total, "expected total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
 
             completed = true
         } catch {
@@ -111,9 +207,12 @@ class MutexLockTests: XCTestCase {
 
 #if !os(OSX)
     static let allTests = [
-        ("testMutexSimpleLock", testMutexSimpleLock),
-        ("testMutexClosure", testMutexClosure),
-        ("testMutexDispatch", testMutexDispatch)
+        ("testMutexLockSimple", testMutexLockSimple),
+        ("testMutexLockClosure", testMutexLockClosure),
+        ("testMutexLockDispatch", testMutexLockDispatch),
+        ("testTryMutexLockSimple", testTryMutexLockSimple),
+        ("testTryMutexLockClosure", testTryMutexLockClosure),
+        ("testTryMutexLockDispatch", testTryMutexLockDispatch)
     ]
 #endif
 }

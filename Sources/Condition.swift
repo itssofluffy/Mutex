@@ -39,7 +39,7 @@ public class Condition {
     }
 
     deinit {
-        wrapper(do:    {
+        wrapper(do: {
                     guard (pthread_cond_destroy(&self.condition) >= 0) else {
                         throw MutexError.CondDestroy(code: errno)
                     }

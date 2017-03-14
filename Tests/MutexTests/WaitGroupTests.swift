@@ -64,7 +64,7 @@ class WaitGroupTests: XCTestCase {
 
         try waitGroup.wait()
 
-        XCTAssert(expectedTotal == total, "The expected total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
+        XCTAssert(expectedTotal == total, "expected total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
     }
 
     func testWaitGroupZero() {
@@ -123,10 +123,6 @@ class WaitGroupTests: XCTestCase {
         XCTAssert(completed, "test not completed")
     }
 
-/*
-#if !os(Linux)
-    // Cannot test on linux because assertionFailure is not recoverable.
-*/
     func testWaitGroupNegative() {
         var completed = false
 
@@ -142,9 +138,6 @@ class WaitGroupTests: XCTestCase {
 
         XCTAssert(completed, "test not completed")
     }
-/*
-#endif
-*/
 
 #if !os(OSX)
     static let allTests = [

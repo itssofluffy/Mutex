@@ -35,7 +35,7 @@ public class Mutex {
     }
 
     deinit {
-        wrapper(do:    {
+        wrapper(do: {
                     guard (pthread_mutex_destroy(&self.mutex) >= 0) else {
                         throw MutexError.MutexDestroy(code: errno)
                     }
@@ -62,11 +62,11 @@ public class Mutex {
     /// - Throws:   `MutesError.MutexLock`
     ///
     /// - Returns:  The generic type returned by the `closure`
-    public func lock<T>(_ closure: @escaping () throws -> T?) throws -> T? {
+    public func lock<T>(_ closure: @escaping () throws -> T) throws -> T {
         try lock()
 
         defer {
-            wrapper(do:    {
+            wrapper(do: {
                         try self.unlock()
                     },
                     catch: { failure in
@@ -79,25 +79,38 @@ public class Mutex {
 
     /// Attempt to lock the mutex before calling the throwing closure. Unlocks after closure is completed
     ///
+    /// - Throws:   `MutesError.MutexTryLock`
+    ///
+    /// - Returns:  The lock status.
+    public func tryLock() throws -> Lock {
+        let returnCode = pthread_mutex_trylock(&mutex)
+
+        guard (returnCode == 0) else {
+            guard (returnCode == EBUSY) else {
+                throw MutexError.MutexTryLock(code: returnCode)
+            }
+
+            return Lock(.Failed)
+        }
+
+        return Lock(.Success)
+    }
+
+    /// Attempt to lock the mutex before calling the throwing closure. Unlocks after closure is completed
+    ///
     /// - Parameters:
     ///   - closure:  The closure to call
     ///
     /// - Throws:   `MutesError.MutexTryLock`
     ///
     /// - Returns:  The lock status and closure return as a `LockResult`.
-    public func tryLock<T>(_ closure: @escaping () throws -> T?) throws -> LockResult<T> {
-        guard (pthread_mutex_trylock(&mutex) >= 0) else {
-            let errorNumber = errno
-
-            guard (errorNumber == EBUSY) else {
-                throw MutexError.MutexTryLock(code: errorNumber)
-            }
-
+    public func tryLock<T>(_ closure: @escaping () throws -> T) throws -> LockResult<T> {
+        guard (try tryLock() == .Success) else {
             return LockResult(lock: .Failed, result: nil)
         }
 
         defer {
-            wrapper(do:    {
+            wrapper(do: {
                         try self.unlock()
                     },
                     catch: { failure in
@@ -105,7 +118,9 @@ public class Mutex {
                     })
         }
 
-        return try LockResult(lock: .Success, result: closure())
+        let result = try closure()
+
+        return LockResult(lock: .Success, result: result)
     }
 
     /// Attempt to unlock the mutex.
