@@ -33,10 +33,16 @@ class MutexLockTests: XCTestCase {
         var completed = false
 
         do {
+            var result = 0
             let mutex = try Mutex()
 
             try mutex.lock()
+
+            result += 1
+
             try mutex.unlock()
+
+            XCTAssertEqual(result, 1, "result == \(result)")
 
             completed = true
         } catch {
@@ -118,9 +124,9 @@ class MutexLockTests: XCTestCase {
 
             if (try mutex.tryLock() == .Failed) {
                 XCTAssert(false, "tryLock() failed")
+            } else {
+                try mutex.unlock()
             }
-
-            try mutex.unlock()
 
             try mutex.lock {
                 if (try mutex.tryLock() == .Success) {
@@ -142,12 +148,12 @@ class MutexLockTests: XCTestCase {
         do {
             let mutex = try Mutex()
 
-            let lockResult = try mutex.tryLock { () -> Int in
-                return 1
+            let lockResult = try mutex.tryLock {
+                return "done"
             }
 
             XCTAssertEqual(lockResult.lock, .Success, "lock = \(lockResult.lock)")
-            XCTAssertEqual(lockResult.result, 1, "result = \(lockResult.result)")
+            XCTAssertEqual(lockResult.result, "done", "result = \(lockResult.result)")
 
             completed = true
         } catch {
@@ -171,11 +177,9 @@ class MutexLockTests: XCTestCase {
 
             DispatchQueue(label: "com.tryMutexTimeout.test", qos: .background).async {
                 wrapper(do: {
-                            try mutex.lock()
-
-                            usleep(TimeInterval(milliseconds: 200))
-
-                            try mutex.unlock()
+                            try mutex.lock {
+                                usleep(TimeInterval(milliseconds: 200))
+                            }
                         },
                         catch: { failure in
                             mutexLogger(failure)
