@@ -38,7 +38,7 @@ class OnceTests: XCTestCase {
                 }
             }
 
-            XCTAssert(total == 1, "total = \(total).")
+            XCTAssertEqual(total, 1, "total = \(total).")
 
             completed = true
         } catch {

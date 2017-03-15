@@ -72,7 +72,7 @@ class ConditionTests: XCTestCase {
 
         try waitGroup.wait()
 
-        XCTAssert(expectedTotal == total, "total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
+        XCTAssertEqual(expectedTotal, total, "total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
     }
 
     func testConditionSignal() {
@@ -103,7 +103,7 @@ class ConditionTests: XCTestCase {
 
             value += "C"
 
-            XCTAssert(value == "ABC", "expecting value to be 'ABC'. got \(value)")
+            XCTAssertEqual(value, "ABC", "expecting value to be 'ABC'. got \(value)")
 
             completed = true
         } catch {
@@ -124,7 +124,7 @@ class ConditionTests: XCTestCase {
 
             try condition.wait(waitTime)
 
-            XCTAssert(now() - start > waitTime, "wait() returned too quickly")
+            XCTAssertGreaterThan(now() - start, waitTime, "wait() returned too quickly")
 
             completed = true
         } catch {

@@ -57,7 +57,7 @@ class MutexLockTests: XCTestCase {
                 result = 1
             }
 
-            XCTAssert(result == 1, "result == \(result)")
+            XCTAssertEqual(result, 1, "result == \(result)")
 
             completed = true
         } catch {
@@ -100,7 +100,7 @@ class MutexLockTests: XCTestCase {
 
             try waitGroup.wait()
 
-            XCTAssert(expectedTotal == total, "expected total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
+            XCTAssertEqual(expectedTotal, total, "expected total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
 
             completed = true
         } catch {
@@ -146,8 +146,8 @@ class MutexLockTests: XCTestCase {
                 return 1
             }
 
-            XCTAssert(lockResult.lock == .Success, "lock = \(lockResult.lock)")
-            XCTAssert(lockResult.result == 1, "result = \(lockResult.result)")
+            XCTAssertEqual(lockResult.lock, .Success, "lock = \(lockResult.lock)")
+            XCTAssertEqual(lockResult.result, 1, "result = \(lockResult.result)")
 
             completed = true
         } catch {
@@ -164,7 +164,7 @@ class MutexLockTests: XCTestCase {
             let mutex = try Mutex()
 
             try mutex.lock {
-                if (try mutex.tryLock(timeout: TimeInterval(milliseconds: 200)) == .Success) {
+                if (try mutex.tryLock(with: TimeInterval(milliseconds: 200)) == .Success) {
                     XCTAssert(false, "tryLock() success")
                 }
             }
@@ -182,13 +182,21 @@ class MutexLockTests: XCTestCase {
                         })
             }
 
-            let results = try mutex.tryLock(timeout: TimeInterval(milliseconds: 500),
-                                            {
-                                                return "done"
-                                            })
+            usleep(TimeInterval(milliseconds: 50))
 
-            XCTAssert(results.lock == .Success, "tryLock() failed")
-            XCTAssert(results.result == "done", "results.result != 'done'")
+            if (try !mutex.isLocked()) {
+                XCTAssert(false, "mutex not locked!")
+            }
+
+            usleep(TimeInterval(milliseconds: 50))
+
+            let lockResults = try mutex.tryLock(with: TimeInterval(milliseconds: 500),
+                                                {
+                                                    return "done"
+                                                })
+
+            XCTAssertEqual(lockResults.lock, .Success, "tryLock() failed")
+            XCTAssertEqual(lockResults.result, "done", "results.result != 'done'")
 
             completed = true
         } catch {
@@ -237,7 +245,7 @@ class MutexLockTests: XCTestCase {
 
             try waitGroup.wait()
 
-            XCTAssert(expectedTotal == total, "expected total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
+            XCTAssertEqual(expectedTotal, total, "expected total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
 
             completed = true
         } catch {

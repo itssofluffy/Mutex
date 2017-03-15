@@ -91,10 +91,10 @@ public class Mutex {
                 throw MutexError.MutexTryLock(code: returnCode)
             }
 
-            return Lock(.Failed)
+            return .Failed
         }
 
-        return Lock(.Success)
+        return .Success
     }
 
     /// Attempt to lock the mutex before calling the throwing closure. Unlocks after closure is completed
@@ -131,7 +131,7 @@ public class Mutex {
     ///             `MutesError.MutexTryLock`
     ///
     /// - Returns:  The lock status and closure return as a `LockResult`.
-    public func tryLock(timeout: TimeInterval) throws -> Lock {
+    public func tryLock(with timeout: TimeInterval) throws -> Lock {
         guard (timeout > 0) else {
             throw MutexError.InvalidTimeout
         }
@@ -144,11 +144,11 @@ public class Mutex {
             }
 
             if (try tryLock() == .Success) {
-                return Lock(.Success)
+                return .Success
             }
         }
 
-        return Lock(.Failed)
+        return .Failed
     }
 
     /// Attempt to lock the mutex with a timeout before calling the throwing closure. Unlocks after closure is completed
@@ -161,8 +161,8 @@ public class Mutex {
     ///             `MutesError.MutexTryLock`
     ///
     /// - Returns:  The lock status and closure return as a `LockResult`.
-    public func tryLock<T>(timeout: TimeInterval, _ closure: @escaping () throws -> T) throws -> LockResult<T> {
-        if (try tryLock(timeout: timeout) == .Success) {
+    public func tryLock<T>(with timeout: TimeInterval, _ closure: @escaping () throws -> T) throws -> LockResult<T> {
+        if (try tryLock(with: timeout) == .Success) {
             defer {
                 wrapper(do: {
                             try self.unlock()
@@ -176,6 +176,22 @@ public class Mutex {
         }
 
         return LockResult(lock: .Failed, result: nil)
+    }
+
+    /// Is the mutex locked.
+    ///
+    /// - Throws:  `MutesError.MutexTryLock`
+    ///            `MutesError.MutexUnLock`
+    ///
+    /// - Returns: The lock status.
+    public func isLocked() throws -> Bool {
+        let result = try tryLock()
+
+        if (result == .Success) {
+            try unlock()
+        }
+
+        return (result == .Failed) ? true : false
     }
 
     /// Attempt to unlock the mutex.

@@ -64,7 +64,7 @@ class WaitGroupTests: XCTestCase {
 
         try waitGroup.wait()
 
-        XCTAssert(expectedTotal == total, "expected total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
+        XCTAssertEqual(expectedTotal, total, "expected total is incorrect. expectedTotal: \(expectedTotal), total: \(total)")
     }
 
     func testWaitGroupZero() {
