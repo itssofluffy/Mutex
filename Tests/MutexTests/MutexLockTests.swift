@@ -22,6 +22,7 @@
 
 import XCTest
 
+import Foundation
 import ISFLibrary
 import Dispatch
 
@@ -156,6 +157,47 @@ class MutexLockTests: XCTestCase {
         XCTAssert(completed, "test not completed")
     }
 
+    func testTryMutexLockTimeout() {
+        var completed = false
+
+        do {
+            let mutex = try Mutex()
+
+            try mutex.lock {
+                if (try mutex.tryLock(timeout: TimeInterval(milliseconds: 200)) == .Success) {
+                    XCTAssert(false, "tryLock() success")
+                }
+            }
+
+            DispatchQueue(label: "com.tryMutexTimeout.test", qos: .background).async {
+                wrapper(do: {
+                            try mutex.lock()
+
+                            usleep(TimeInterval(milliseconds: 200))
+
+                            try mutex.unlock()
+                        },
+                        catch: { failure in
+                            mutexLogger(failure)
+                        })
+            }
+
+            let results = try mutex.tryLock(timeout: TimeInterval(milliseconds: 500),
+                                            {
+                                                return "done"
+                                            })
+
+            XCTAssert(results.lock == .Success, "tryLock() failed")
+            XCTAssert(results.result == "done", "results.result != 'done'")
+
+            completed = true
+        } catch {
+            XCTAssert(false, "\(error)")
+        }
+
+        XCTAssert(completed, "test not completed")
+    }
+
     func testTryMutexLockDispatch() {
         var completed = false
 
@@ -212,6 +254,7 @@ class MutexLockTests: XCTestCase {
         ("testMutexLockDispatch", testMutexLockDispatch),
         ("testTryMutexLockSimple", testTryMutexLockSimple),
         ("testTryMutexLockClosure", testTryMutexLockClosure),
+        ("testTryMutexLockTimeout", testTryMutexLockTimeout),
         ("testTryMutexLockDispatch", testTryMutexLockDispatch)
     ]
 #endif

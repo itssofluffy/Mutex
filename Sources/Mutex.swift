@@ -21,6 +21,7 @@
 */
 
 import Glibc
+import Foundation
 import ISFLibrary
 
 /// A mutual exclusion lock.
@@ -118,9 +119,63 @@ public class Mutex {
                     })
         }
 
-        let result = try closure()
+        return try LockResult(lock: .Success, result: closure())
+    }
 
-        return LockResult(lock: .Success, result: result)
+    /// Attempt to lock the mutex with a timeout.
+    ///
+    /// - Parameters:
+    ///   - timeout:  The timeout to use to obtain a lock.
+    ///
+    /// - Throws:   `MutexError.InvalidTimeout`
+    ///             `MutesError.MutexTryLock`
+    ///
+    /// - Returns:  The lock status and closure return as a `LockResult`.
+    public func tryLock(timeout: TimeInterval) throws -> Lock {
+        guard (timeout > 0) else {
+            throw MutexError.InvalidTimeout
+        }
+
+        let timeoutAt = Date().timeIntervalSince1970 + timeout
+
+        while (true) {
+            if (Date().timeIntervalSince1970 >= timeoutAt) {
+                break
+            }
+
+            if (try tryLock() == .Success) {
+                return Lock(.Success)
+            }
+        }
+
+        return Lock(.Failed)
+    }
+
+    /// Attempt to lock the mutex with a timeout before calling the throwing closure. Unlocks after closure is completed
+    ///
+    /// - Parameters:
+    ///   - timeout:  The timeout to use to obtain a lock.
+    ///   - closure:  The closure to call
+    ///
+    /// - Throws:   `MutexError.InvalidTimeout`
+    ///             `MutesError.MutexTryLock`
+    ///
+    /// - Returns:  The lock status and closure return as a `LockResult`.
+    public func tryLock<T>(timeout: TimeInterval, _ closure: @escaping () throws -> T) throws -> LockResult<T> {
+        if (try tryLock(timeout: timeout) == .Success) {
+            defer {
+                wrapper(do: {
+                            try self.unlock()
+                        },
+                        catch: { failure in
+                            mutexLogger(failure)
+                        })
+            }
+
+            return try LockResult(lock: .Success, result: closure())
+        }
+
+        return LockResult(lock: .Failed, result: nil)
     }
 
     /// Attempt to unlock the mutex.

@@ -28,6 +28,7 @@ public enum MutexError: Error {
     case MutexLock(code: CInt)
     case MutexTryLock(code: CInt)
     case MutexUnlock(code: CInt)
+    case InvalidTimeout
     case MutexSetPriorityCeiling(code: CInt)
     case MutexGetPriorityCeiling(code: CInt)
 
@@ -58,6 +59,8 @@ extension MutexError: CustomStringConvertible {
                 return "pthread_mutex_trylock() failed: " + errorString(code)
             case .MutexUnlock(let code):
                 return "pthread_mutex_unlock() failed: " + errorString(code)
+            case .InvalidTimeout:
+                return "timeout must be > 0"
             case .MutexSetPriorityCeiling(let code):
                 return "pthread_mutex_setprioceiling() failed: " + errorString(code)
             case .MutexGetPriorityCeiling(let code):
