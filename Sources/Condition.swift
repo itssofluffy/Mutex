@@ -45,7 +45,7 @@ public class Condition {
                     }
                 },
                 catch: { failure in
-                    mutexLogger(failure)
+                    mutexErrorLogger(failure)
                 })
     }
 

@@ -42,7 +42,7 @@ public class Mutex {
                     }
                 },
                 catch: { failure in
-                    mutexLogger(failure)
+                    mutexErrorLogger(failure)
                 })
     }
 
@@ -71,7 +71,7 @@ public class Mutex {
                         try self.unlock()
                     },
                     catch: { failure in
-                        mutexLogger(failure)
+                        mutexErrorLogger(failure)
                     })
         }
 
@@ -115,7 +115,7 @@ public class Mutex {
                         try self.unlock()
                     },
                     catch: { failure in
-                        mutexLogger(failure)
+                        mutexErrorLogger(failure)
                     })
         }
 
@@ -168,7 +168,7 @@ public class Mutex {
                             try self.unlock()
                         },
                         catch: { failure in
-                            mutexLogger(failure)
+                            mutexErrorLogger(failure)
                         })
             }
 

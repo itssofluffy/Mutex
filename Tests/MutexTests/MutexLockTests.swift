@@ -103,7 +103,7 @@ class MutexLockTests: XCTestCase {
                                 try waitGroup.done()
                             },
                             catch: { failure in
-                                mutexLogger(failure)
+                                mutexErrorLogger(failure)
                             })
                 }
             }
@@ -192,7 +192,7 @@ class MutexLockTests: XCTestCase {
                             }
                         },
                         catch: { failure in
-                            mutexLogger(failure)
+                            mutexErrorLogger(failure)
                         })
             }
 
@@ -246,7 +246,7 @@ class MutexLockTests: XCTestCase {
                                 }
                             },
                             catch: { failure in
-                                mutexLogger(failure)
+                                mutexErrorLogger(failure)
                             })
                 }
             }

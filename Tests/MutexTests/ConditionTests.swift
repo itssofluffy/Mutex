@@ -63,7 +63,7 @@ class ConditionTests: XCTestCase {
                             try waitGroup.done()
                         },
                         catch: { failure in
-                            mutexLogger(failure)
+                            mutexErrorLogger(failure)
                         })
             }
         }
@@ -101,7 +101,7 @@ class ConditionTests: XCTestCase {
                             }
                         },
                         catch: { failure in
-                            mutexLogger(failure)
+                            mutexErrorLogger(failure)
                         })
             }
 

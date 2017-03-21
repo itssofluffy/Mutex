@@ -55,7 +55,7 @@ class WaitGroupTests: XCTestCase {
                             try waitGroup.done()
                         },
                         catch: { failure in
-                            mutexLogger(failure)
+                            mutexErrorLogger(failure)
                         })
             }
         }
