@@ -25,23 +25,45 @@ import Foundation
 import ISFLibrary
 
 public class Condition {
+    private var attributes = pthread_condattr_t()
     private var condition = pthread_cond_t()
     public let mutex: Mutex
 
     ///  Returns a new Cond.
-    /// - Parameter mutex: A Mutex object.
+    ///
+    /// - Parameter:
+    ///   - mutex:  A Mutex object.
+    ///
+    /// - Throws:   `MutexError.CondAttrInit`
+    ///             `MutexError.CondInit`
     public init(_ mutex: Mutex) throws {
         self.mutex = mutex
 
-        guard (pthread_cond_init(&condition, nil) >= 0) else {
-            throw MutexError.CondInit(code: errno)
+        var returnCode = pthread_condattr_init(&attributes)
+
+        guard (returnCode == 0) else {
+            throw MutexError.CondAttrInit(code: returnCode)
+        }
+
+        returnCode = pthread_cond_init(&condition, &attributes)
+
+        guard (returnCode == 0) else {
+            throw MutexError.CondInit(code: returnCode)
         }
     }
 
     deinit {
         wrapper(do: {
-                    guard (pthread_cond_destroy(&self.condition) >= 0) else {
-                        throw MutexError.CondDestroy(code: errno)
+                    var returnCode = pthread_cond_destroy(&self.condition)
+
+                    guard (returnCode == 0) else {
+                        throw MutexError.CondDestroy(code: returnCode)
+                    }
+
+                    returnCode = pthread_condattr_destroy(&self.attributes)
+
+                    guard (returnCode == 0) else {
+                        throw MutexError.CondAttrDestroy(code: returnCode)
                     }
                 },
                 catch: { failure in
@@ -51,23 +73,29 @@ public class Condition {
 
     /// Wakes all operations waiting on `Cond`.
     public func broadcast() throws {
-        guard (pthread_cond_broadcast(&condition) >= 0) else {
-            throw MutexError.CondBroadcast(code: errno)
+        let returnCode = pthread_cond_broadcast(&condition)
+
+        guard (returnCode == 0) else {
+            throw MutexError.CondBroadcast(code: returnCode)
         }
     }
 
     /// Wakes one operations waiting on `Cond`.
     public func signal() throws {
-        guard (pthread_cond_signal(&condition) >= 0) else {
-            throw MutexError.CondSignal(code: errno)
+        let returnCode = pthread_cond_signal(&condition)
+
+        guard (returnCode == 0) else {
+            throw MutexError.CondSignal(code: returnCode)
         }
     }
 
     @discardableResult
     public func wait(_ timeout: TimeInterval = -1) throws -> Wait {
         if (timeout < 0) {
-            guard (pthread_cond_wait(&condition, &mutex.mutex) >= 0) else {
-                throw MutexError.CondWait(code: errno)
+            let returnCode = pthread_cond_wait(&condition, &mutex.mutex)
+
+            guard (returnCode == 0) else {
+                throw MutexError.CondWait(code: returnCode)
             }
         } else {
             var tv = timeval()
@@ -80,11 +108,11 @@ public class Condition {
             ts.tv_sec += ts.tv_nsec / 1_000_000_000
             ts.tv_nsec %= 1_000_000_000
 
-            guard (pthread_cond_timedwait(&condition, &mutex.mutex, &ts) >= 0) else {
-                let errorNumber = errno
+            let returnCode = pthread_cond_timedwait(&condition, &mutex.mutex, &ts)
 
-                guard (errorNumber == ETIMEDOUT) else {
-                    throw MutexError.CondTimedWait(code: errorNumber)
+            guard (returnCode == 0) else {
+                guard (returnCode == ETIMEDOUT) else {
+                    throw MutexError.CondTimedWait(code: returnCode)
                 }
 
                 return .TimedOut

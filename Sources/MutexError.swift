@@ -23,7 +23,11 @@
 import Glibc
 
 public enum MutexError: Error {
+    case MutexAttrInit(code: CInt)
+    case MutexAttrSetType(code: CInt)
+    case MutexAttrGetType(code: CInt)
     case MutexInit(code: CInt)
+    case MutexAttrDestroy(code: CInt)
     case MutexDestroy(code: CInt)
     case MutexLock(code: CInt)
     case MutexTryLock(code: CInt)
@@ -32,7 +36,9 @@ public enum MutexError: Error {
     case MutexSetPriorityCeiling(code: CInt)
     case MutexGetPriorityCeiling(code: CInt)
 
+    case CondAttrInit(code: CInt)
     case CondInit(code: CInt)
+    case CondAttrDestroy(code: CInt)
     case CondDestroy(code: CInt)
     case CondBroadcast(code: CInt)
     case CondSignal(code: CInt)
@@ -49,8 +55,16 @@ extension MutexError: CustomStringConvertible {
         }
 
         switch self {
+            case .MutexAttrInit(let code):
+                return "pthread_mutexattr_init() failed: " + errorString(code)
+            case .MutexAttrSetType(let code):
+                return "pthread_mutexattr_settype() failed: " + errorString(code)
+            case .MutexAttrGetType(let code):
+                return "pthread_mutexattr_gettype() failed: " + errorString(code)
             case .MutexInit(let code):
                 return "pthread_mutex_init() failed: " + errorString(code)
+            case .MutexAttrDestroy(let code):
+                return "pthread_mutexattr_destroy() failed: " + errorString(code)
             case .MutexDestroy(let code):
                 return "pthread_mutex_destroy() failed: " + errorString(code)
             case .MutexLock(let code):
@@ -65,8 +79,12 @@ extension MutexError: CustomStringConvertible {
                 return "pthread_mutex_setprioceiling() failed: " + errorString(code)
             case .MutexGetPriorityCeiling(let code):
                 return "pthread_mutex_getprioceiling() failed: " + errorString(code)
+            case .CondAttrInit(let code):
+                return "pthread_condattr_init() failed: " + errorString(code)
             case .CondInit(let code):
                 return "pthread_cond_init() failed: " + errorString(code)
+            case .CondAttrDestroy(let code):
+                return "pthread_condattr_destroy() failed: " + errorString(code)
             case .CondDestroy(let code):
                 return "pthread_cond_destroy() failed: " + errorString(code)
             case .CondBroadcast(let code):

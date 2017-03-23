@@ -26,19 +26,42 @@ import ISFLibrary
 
 /// A mutual exclusion lock.
 public class Mutex {
+    private var attribute = pthread_mutexattr_t()
     public internal(set) var mutex = pthread_mutex_t()
 
     /// Returns a new Mutex.
-    public init() throws {
-        guard (pthread_mutex_init(&mutex, nil) >= 0) else {
-            throw MutexError.MutexInit(code: errno)
+    public init(type: MutexType = .Default) throws {
+        var returnCode = pthread_mutexattr_init(&attribute)
+
+        guard (returnCode == 0) else {
+            throw MutexError.MutexAttrInit(code: returnCode)
+        }
+
+        returnCode = pthread_mutexattr_settype(&attribute, type.rawValue)
+
+        guard (returnCode == 0) else {
+            throw MutexError.MutexAttrSetType(code: returnCode)
+        }
+
+        returnCode = pthread_mutex_init(&mutex, &attribute)
+
+        guard (returnCode == 0) else {
+            throw MutexError.MutexInit(code: returnCode)
         }
     }
 
     deinit {
         wrapper(do: {
-                    guard (pthread_mutex_destroy(&self.mutex) >= 0) else {
-                        throw MutexError.MutexDestroy(code: errno)
+                    var returnCode = pthread_mutex_destroy(&self.mutex)
+
+                    guard (returnCode == 0) else {
+                        throw MutexError.MutexDestroy(code: returnCode)
+                    }
+
+                    returnCode = pthread_mutexattr_destroy(&self.attribute)
+
+                    guard (returnCode == 0) else {
+                        throw MutexError.MutexAttrDestroy(code: returnCode)
                     }
                 },
                 catch: { failure in
@@ -50,8 +73,10 @@ public class Mutex {
     ///
     /// - Throws:   `MutesError.MutexLock`
     public func lock() throws {
-        guard (pthread_mutex_lock(&mutex) >= 0) else {
-            throw MutexError.MutexLock(code: errno)
+        let returnCode = pthread_mutex_lock(&mutex)
+
+        guard (returnCode == 0) else {
+            throw MutexError.MutexLock(code: returnCode)
         }
     }
 
@@ -141,9 +166,7 @@ public class Mutex {
         while (true) {
             if (Date().timeIntervalSince1970 >= timeoutAt) {
                 break
-            }
-
-            if (try tryLock() == .Success) {
+            } else if (try tryLock() == .Success) {
                 return .Success
             }
         }
@@ -194,20 +217,42 @@ public class Mutex {
         return (result == .Failed) ? true : false
     }
 
+    /// Get the mutex type of the mutex.
+    ///
+    /// - Throws:   `MutexError.MutexAttrGetType`
+    ///
+    /// - Returns:  The mutex type.
+    public func getMutexType() throws -> MutexType {
+        var type = CInt.allZeros
+
+        let returnCode = pthread_mutexattr_gettype(&attribute, &type)
+
+        guard (returnCode == 0) else {
+            throw MutexError.MutexAttrGetType(code: returnCode)
+        }
+
+        return MutexType(rawValue: type)
+    }
+
     /// Attempt to unlock the mutex.
     ///
     /// - Throws:   `MutesError.MutexUnLock`
     public func unlock() throws {
-        guard (pthread_mutex_unlock(&mutex) >= 0) else {
-            throw MutexError.MutexUnlock(code: errno)
+        let returnCode = pthread_mutex_unlock(&mutex)
+
+        guard (returnCode == 0) else {
+            throw MutexError.MutexUnlock(code: returnCode)
         }
     }
 
+    @discardableResult
     public func setPriorityCeiling(_ ceiling: Int) throws -> Int {
         var oldCeiling = CInt.allZeros
 
-        guard (pthread_mutex_setprioceiling(&mutex, CInt(ceiling), &oldCeiling) >= 0) else {
-            throw MutexError.MutexSetPriorityCeiling(code: errno)
+        let returnCode = pthread_mutex_setprioceiling(&mutex, CInt(ceiling), &oldCeiling)
+
+        guard (returnCode == 0) else {
+            throw MutexError.MutexSetPriorityCeiling(code: returnCode)
         }
 
         return Int(oldCeiling)
@@ -216,8 +261,10 @@ public class Mutex {
     public func getPriorityCeiling() throws -> Int {
         var ceiling = CInt.allZeros
 
-        guard (pthread_mutex_getprioceiling(&mutex, &ceiling) >= 0) else {
-            throw MutexError.MutexGetPriorityCeiling(code: errno)
+        let returnCode = pthread_mutex_getprioceiling(&mutex, &ceiling)
+
+        guard (returnCode == 0) else {
+            throw MutexError.MutexGetPriorityCeiling(code: returnCode)
         }
 
         return Int(ceiling)
