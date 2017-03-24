@@ -20,11 +20,11 @@
 */
 
 public class Once {
-    private let mutex: Mutex
+    private let _mutex: Mutex
     public private(set) var done = false
 
     public init() throws {
-        self.mutex = try Mutex()
+        self._mutex = try Mutex()
     }
 
     /// Execute a closure once whilst exclusive locked using a mutex.
@@ -35,7 +35,7 @@ public class Once {
     /// - Returns:    The return of the `closure` or nil if the `closure`
     ///               has already been called.
     public func execute<T>(_ closure: @escaping () throws -> T) throws -> T? {
-        return try mutex.lock {
+        return try _mutex.lock {
             if (!self.done) {
                 self.done = true
 

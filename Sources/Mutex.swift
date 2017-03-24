@@ -26,25 +26,25 @@ import ISFLibrary
 
 /// A mutual exclusion lock.
 public class Mutex {
-    private var attribute = pthread_mutexattr_t()
+    private var _attribute = pthread_mutexattr_t()
     public internal(set) var mutex = pthread_mutex_t()
     public let type: MutexType
 
     /// Returns a new Mutex.
     public init(type: MutexType = .Default) throws {
-        var returnCode = pthread_mutexattr_init(&attribute)
+        var returnCode = pthread_mutexattr_init(&_attribute)
 
         guard (returnCode == 0) else {
             throw MutexError.MutexAttrInit(code: returnCode)
         }
 
-        returnCode = pthread_mutexattr_settype(&attribute, type.rawValue)
+        returnCode = pthread_mutexattr_settype(&_attribute, type.rawValue)
 
         guard (returnCode == 0) else {
             throw MutexError.MutexAttrSetType(code: returnCode)
         }
 
-        returnCode = pthread_mutex_init(&mutex, &attribute)
+        returnCode = pthread_mutex_init(&mutex, &_attribute)
 
         guard (returnCode == 0) else {
             throw MutexError.MutexInit(code: returnCode)
@@ -61,7 +61,7 @@ public class Mutex {
                         throw MutexError.MutexDestroy(code: returnCode)
                     }
 
-                    returnCode = pthread_mutexattr_destroy(&self.attribute)
+                    returnCode = pthread_mutexattr_destroy(&self._attribute)
 
                     guard (returnCode == 0) else {
                         throw MutexError.MutexAttrDestroy(code: returnCode)

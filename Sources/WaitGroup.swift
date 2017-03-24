@@ -21,22 +21,22 @@
 */
 
 public class WaitGroup {
-    private let condition: Condition
-    private var count = 0
+    private let _condition: Condition
+    private var _count = 0
 
     public init() throws {
-        condition = try Condition(Mutex())
+        self._condition = try Condition(Mutex())
     }
 
     public func add(_ delta: Int) throws {
-        try condition.mutex.lock {
-            self.count += delta
+        try _condition.mutex.lock {
+            self._count += delta
 
-            guard (self.count >= 0) else {
-                throw MutexError.NegativeWaitGroup(count: self.count)
+            guard (self._count >= 0) else {
+                throw MutexError.NegativeWaitGroup(count: self._count)
             }
 
-            try self.condition.broadcast()
+            try self._condition.broadcast()
         }
     }
 
@@ -47,9 +47,9 @@ public class WaitGroup {
 
     /// Blocks until the WaitGroup counter is Zero.
     public func wait() throws {
-        try condition.mutex.lock {
-            while (self.count > 0) {
-                try self.condition.wait()
+        try _condition.mutex.lock {
+            while (self._count > 0) {
+                try self._condition.wait()
             }
         }
     }
