@@ -28,6 +28,7 @@ import ISFLibrary
 public class Mutex {
     private var attribute = pthread_mutexattr_t()
     public internal(set) var mutex = pthread_mutex_t()
+    public let type: MutexType
 
     /// Returns a new Mutex.
     public init(type: MutexType = .Default) throws {
@@ -48,6 +49,8 @@ public class Mutex {
         guard (returnCode == 0) else {
             throw MutexError.MutexInit(code: returnCode)
         }
+
+        self.type = type
     }
 
     deinit {
@@ -215,23 +218,6 @@ public class Mutex {
         }
 
         return (result == .Failed) ? true : false
-    }
-
-    /// Get the mutex type of the mutex.
-    ///
-    /// - Throws:   `MutexError.MutexAttrGetType`
-    ///
-    /// - Returns:  The mutex type.
-    public func getMutexType() throws -> MutexType {
-        var type = CInt.allZeros
-
-        let returnCode = pthread_mutexattr_gettype(&attribute, &type)
-
-        guard (returnCode == 0) else {
-            throw MutexError.MutexAttrGetType(code: returnCode)
-        }
-
-        return MutexType(rawValue: type)
     }
 
     /// Attempt to unlock the mutex.

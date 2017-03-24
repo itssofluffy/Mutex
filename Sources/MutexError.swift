@@ -25,7 +25,6 @@ import Glibc
 public enum MutexError: Error {
     case MutexAttrInit(code: CInt)
     case MutexAttrSetType(code: CInt)
-    case MutexAttrGetType(code: CInt)
     case MutexInit(code: CInt)
     case MutexAttrDestroy(code: CInt)
     case MutexDestroy(code: CInt)
@@ -59,8 +58,6 @@ extension MutexError: CustomStringConvertible {
                 return "pthread_mutexattr_init() failed: " + errorString(code)
             case .MutexAttrSetType(let code):
                 return "pthread_mutexattr_settype() failed: " + errorString(code)
-            case .MutexAttrGetType(let code):
-                return "pthread_mutexattr_gettype() failed: " + errorString(code)
             case .MutexInit(let code):
                 return "pthread_mutex_init() failed: " + errorString(code)
             case .MutexAttrDestroy(let code):
