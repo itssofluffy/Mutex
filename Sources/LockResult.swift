@@ -27,6 +27,10 @@ public struct LockResult<T> {
 
 extension LockResult: CustomStringConvertible {
     public var description: String {
-        return "lock: \(lock), result: \(result)"
+        if let result = self.result {
+            return "lock: \(lock), result: \(result)"
+        } else {
+            return "lock: \(lock), null result"
+        }
     }
 }

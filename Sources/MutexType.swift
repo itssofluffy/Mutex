@@ -20,7 +20,11 @@
     IN THE SOFTWARE.
 */
 
-import Glibc
+#if os(OSX) || os(iOS) || os(watchOS) || os(tvOS)
+    import Darwin
+#else
+    import Glibc
+#endif
 
 public enum MutexType {
     case Default      // Attempting to recursively lock a mutex of this type results in undefined behavior.
