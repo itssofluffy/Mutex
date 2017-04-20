@@ -20,7 +20,12 @@
     IN THE SOFTWARE.
 */
 
-import Glibc
+#if os(OSX) || os(iOS) || os(watchOS) || os(tvOS)
+    import Darwin
+#else
+    import Glibc
+#endif
+
 import Foundation
 import ISFLibrary
 
@@ -104,7 +109,7 @@ public class Condition {
             gettimeofday(&tv, nil)
 
             ts.tv_sec = time(nil) + timeout.wholeSeconds
-            ts.tv_nsec = Int(tv.tv_usec * 1_000 + (1_000 * 1_000 * (timeout.milliseconds % 1_000)))
+            ts.tv_nsec = Int(tv.tv_usec * 1_000 + Int32(1_000 * (timeout.milliseconds)))
             ts.tv_sec += ts.tv_nsec / 1_000_000_000
             ts.tv_nsec %= 1_000_000_000
 
