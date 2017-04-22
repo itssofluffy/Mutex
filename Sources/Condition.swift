@@ -108,8 +108,9 @@ public class Condition {
 
             gettimeofday(&tv, nil)
 
-            ts.tv_sec = time(nil) + timeout.wholeSeconds
-            ts.tv_nsec = Int(tv.tv_usec * 1_000 + Int32(1_000 * (timeout.milliseconds)))
+            ts.tv_sec = time(nil) + timeout.milliseconds / 1000
+            let intermediate = 1000 * 1000 * (timeout.milliseconds % 1000)
+            ts.tv_nsec = Int(tv.tv_usec * 1000 + intermediate)
             ts.tv_sec += ts.tv_nsec / 1_000_000_000
             ts.tv_nsec %= 1_000_000_000
 
