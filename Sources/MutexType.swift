@@ -1,7 +1,7 @@
 /*
     MutexType.swift
 
-    Copyright (c) 2017 Stephen Whittle  All rights reserved.
+    Copyright (c) 2017, 2018 Stephen Whittle  All rights reserved.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"),
@@ -20,10 +20,10 @@
     IN THE SOFTWARE.
 */
 
-#if os(OSX) || os(iOS) || os(watchOS) || os(tvOS)
-    import Darwin
+#if os(Linux)
+import Glibc
 #else
-    import Glibc
+import Darwin
 #endif
 
 public enum MutexType {
@@ -58,6 +58,21 @@ public enum MutexType {
                 return CInt(PTHREAD_MUTEX_ERRORCHECK)
             case .Recursive:
                 return CInt(PTHREAD_MUTEX_RECURSIVE)
+        }
+    }
+}
+
+extension MutexType: CustomStringConvertible {
+    public var description: String {
+        switch self {
+            case .Default:
+                return "default"
+            case .Normal:
+                return "normal"
+            case .ErrorCheck:
+                return "error check"
+            case .Recursive:
+                return "recursive"
         }
     }
 }

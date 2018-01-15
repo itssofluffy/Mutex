@@ -1,7 +1,7 @@
 /*
     Mutex.swift
 
-    Copyright (c) 2016, 2017 Stephen Whittle  All rights reserved.
+    Copyright (c) 2016, 2017, 2018 Stephen Whittle  All rights reserved.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"),
@@ -20,10 +20,10 @@
     IN THE SOFTWARE.
 */
 
-#if os(OSX) || os(iOS) || os(watchOS) || os(tvOS)
-    import Darwin
+#if os(Linux)
+import Glibc
 #else
-    import Glibc
+import Darwin
 #endif
 
 import Foundation
@@ -238,7 +238,7 @@ public class Mutex {
 
     @discardableResult
     public func setPriorityCeiling(_ ceiling: Int) throws -> Int {
-        var oldCeiling = CInt.allZeros
+        var oldCeiling: CInt = 0
 
         let returnCode = pthread_mutex_setprioceiling(&mutex, CInt(ceiling), &oldCeiling)
 
@@ -250,7 +250,7 @@ public class Mutex {
     }
 
     public func getPriorityCeiling() throws -> Int {
-        var ceiling = CInt.allZeros
+        var ceiling: CInt = 0
 
         let returnCode = pthread_mutex_getprioceiling(&mutex, &ceiling)
 

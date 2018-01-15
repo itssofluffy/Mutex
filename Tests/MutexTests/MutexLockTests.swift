@@ -1,7 +1,7 @@
 /*
     MutexLockTests.swift
 
-    Copyright (c) 2017 Stephen Whittle  All rights reserved.
+    Copyright (c) 2017, 2018 Stephen Whittle  All rights reserved.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"),
@@ -163,7 +163,7 @@ class MutexLockTests: XCTestCase {
             }
 
             XCTAssertEqual(lockResult.lock, .Success, "lock = \(lockResult.lock)")
-            XCTAssertEqual(lockResult.result, "done", "result = \(lockResult.result)")
+            XCTAssertEqual(lockResult.result, "done", "result = " + String(describing: lockResult.result))
 
             completed = true
         } catch {

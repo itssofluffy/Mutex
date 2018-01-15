@@ -2,7 +2,7 @@ language: generic # default to ruby
 matrix:
     include:
         - os: osx
-          osx_image: xcode8
+          osx_image: xcode9.2
         - os: linux
           sudo: required
           dist: trusty
