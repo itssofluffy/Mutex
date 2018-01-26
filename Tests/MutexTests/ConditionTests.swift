@@ -192,7 +192,7 @@ class ConditionTests: XCTestCase {
         XCTAssert(completed, "test not completed")
     }
 
-#if !os(OSX)
+#if os(Linux)
     static let allTests = [
         ("testConditionSignal", testConditionSignal),
         ("testConditionTimeout", testConditionTimeout),

@@ -58,7 +58,7 @@ class OnceTests: XCTestCase {
         XCTAssert(completed, "test not completed")
     }
 
-#if !os(OSX)
+#if os(Linux)
     static let allTests = [
         ("testOnce", testOnce)
     ]

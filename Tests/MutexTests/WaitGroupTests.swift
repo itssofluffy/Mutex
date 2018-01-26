@@ -149,7 +149,7 @@ class WaitGroupTests: XCTestCase {
         XCTAssert(completed, "test not completed")
     }
 
-#if !os(OSX)
+#if os(Linux)
     static let allTests = [
         ("testWaitGroupZero", testWaitGroupZero),
         ("testWaitGroupTen", testWaitGroupTen),

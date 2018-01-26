@@ -269,7 +269,7 @@ class MutexLockTests: XCTestCase {
         XCTAssert(completed, "test not completed")
     }
 
-#if !os(OSX)
+#if os(Linux)
     static let allTests = [
         ("testMutexLockSimple", testMutexLockSimple),
         ("testMutexLockClosure", testMutexLockClosure),

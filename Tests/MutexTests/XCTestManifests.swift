@@ -42,7 +42,7 @@ func makeTotal(_ count: Int) -> Int {
     return result
 }
 
-#if !os(OSX)
+#if os(Linux)
 public let allTests = [
     testCase(MutexLockTests.allTests),
     testCase(OnceTests.allTests),
