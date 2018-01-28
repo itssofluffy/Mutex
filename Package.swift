@@ -1,7 +1,7 @@
 /*
     Package.swift
 
-    Copyright (c) 2016, 2017 Stephen Whittle  All rights reserved.
+    Copyright (c) 2016, 2017, 2018 Stephen Whittle  All rights reserved.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"),
@@ -22,6 +22,7 @@
 
 import PackageDescription
 
+#if os(Linux) || os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 let package = Package(
     name: "Mutex",
     dependencies: [
@@ -35,11 +36,7 @@ let staticLibrary = Product(
     modules: ["Mutex"]
 )
 
-let dynamicLibrary = Product(
-    name:    "Mutex",
-    type:    .Library(.Dynamic),
-    modules: ["Mutex"]
-)
-
 products.append(staticLibrary)
-products.append(dynamicLibrary)
+#else
+fatalError("Unsupported OS")
+#endif
